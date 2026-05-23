@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "motors.h"
+#include "controller.h"
+#include "encoders.h"
+#include <stdint.h>
 
 /* USER CODE END Includes */
 
@@ -46,6 +50,9 @@ DMA_HandleTypeDef hdma_adc1;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
+
+volatile int16_t leftEncoderCount;
+volatile int16_t rightEncoderCount;
 
 /* USER CODE BEGIN PV */
 
@@ -103,6 +110,13 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
   /* USER CODE END 2 */
 
@@ -110,8 +124,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // leftEncoderCount = getLeftEncoderCounts();
+    // rightEncoderCount = getRightEncoderCounts();
+    
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

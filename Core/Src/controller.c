@@ -7,32 +7,43 @@
 #include "pid.h"
 
 /*
- * We recommend you implement this function so that move(1) will move your rat 1 cell forward.
+ * Encoder counts calibrated for your maze cell size and hardware.
+ * Measure empirically: drive one cell, read encoder counts, set COUNTS_PER_CELL.
+ * Similarly for COUNTS_PER_90DEG.
+ */
+#define COUNTS_PER_CELL    500  /* encoder counts for one 180mm maze cell */
+#define COUNTS_PER_90DEG   220  /* encoder counts for a 90-degree in-place turn */
+
+/*
+ * move(1)  → forward one cell
+ * move(-1) → backward one cell
+ * move(n)  → n cells
  */
 void move(int8_t n) {
-	/*
-	 * For assignment 3.1: Don't worry about implementing this yet
-	 * For assignment 3.2: This function should set the distance and angle goals appropriately for PID (hint: using the setGoal functions in pid.c)
-	 * and wait until the error becomes sufficiently small and persistent before exiting. This function should NOT exit before then.
-	 *
-	 * HINT: Use a while loop to wait until the rat has moved the desired distance
-	 *
-	 * You should also call resetPID before exiting this function so your rat is ready for the next instruction.
-	 */
+    resetPID();
+    setPIDGoalD((int16_t)(n * COUNTS_PER_CELL));
+    setPIDGoalA(0);
+
+    while (!PIDdone()) {
+        /* SysTick ISR calls updatePID() every millisecond; just wait */
+    }
+
+    resetPID();
 }
 
 /*
- * We recommend you implement this function so that turn(1) turns your rat 90 degrees in your positive rotation
- * direction and turn(-1) turns the other way.
+ * turn(1)  → 90 degrees in positive rotation direction (e.g. right)
+ * turn(-1) → 90 degrees in negative rotation direction (e.g. left)
+ * turn(2)  → 180 degrees (U-turn)
  */
 void turn(int8_t n) {
-	/*
-	 * For assignment 3.1: Don't worry about implementing this yet
-	 * For assignment 3.2: This function should set the distance and angle goals appropriately for PID (hint: using the setGoal functions in pid.c)
-	 * and wait until the error becomes sufficiently small and persistent before exiting. This function should NOT exit before then.
-	 *
-	 * HINT: Use a while loop to wait until the turn is complete
-	 *
-	 * You should also call resetPID before exiting this function so your rat is ready for the next instruction.
-	 */
+    resetPID();
+    setPIDGoalD(0);
+    setPIDGoalA((int16_t)(n * COUNTS_PER_90DEG));
+
+    while (!PIDdone()) {
+        /* SysTick ISR calls updatePID() every millisecond; just wait */
+    }
+
+    resetPID();
 }
