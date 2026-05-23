@@ -11,8 +11,8 @@
  * Measure empirically: drive one cell, read encoder counts, set COUNTS_PER_CELL.
  * Similarly for COUNTS_PER_90DEG.
  */
-#define COUNTS_PER_CELL    500  /* encoder counts for one 180mm maze cell */
-#define COUNTS_PER_90DEG   220  /* encoder counts for a 90-degree in-place turn */
+#define COUNTS_PER_CELL    625  /* encoder counts for one 180mm maze cell */
+#define COUNTS_PER_90DEG   562  /* encoder counts for a 90-degree in-place turn */
 
 /*
  * move(1)  → forward one cell

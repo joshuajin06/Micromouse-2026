@@ -9,6 +9,7 @@
 void SysTickFunction(void) {
     /* Called every millisecond by the SysTick ISR */
     updatePID();
+    
 
     /*
      * Prevents PID windup when encoder counts approach int16 overflow (~9 m of travel).
@@ -18,6 +19,6 @@ void SysTickFunction(void) {
             || getRightEncoderCounts() < -31000 || getLeftEncoderCounts() < -31000) {
         int16_t difference = getRightEncoderCounts() - getLeftEncoderCounts();
         resetEncoders();
-        TIM2->CNT = (int16_t) difference; //set right encoder counts to difference
+        TIM2->CNT = (uint16_t)(int16_t)(-difference); //set right encoder counts to negative difference (right encoder is negated)
     }
 }

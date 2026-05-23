@@ -12,10 +12,10 @@ float limitPWM(float pwm) {
 }
 
 /*
- * Left motor: TIM4 CH3 = forward, CH4 = backward.
+ * Right motor: TIM4 CH3 = forward, CH4 = backward.
  * Always zero the inactive channel before setting the active one.
  */
-void setMotorLPWM(float pwm) {
+void setMotorRPWM(float pwm) {
     pwm = limitPWM(pwm);
     if (pwm >= 0.0f) {
         TIM4->CCR4 = 0;
@@ -27,17 +27,17 @@ void setMotorLPWM(float pwm) {
 }
 
 /*
- * Right motor: TIM4 CH1 = forward, CH2 = backward.
+ * Left motor: TIM4 CH1 = forward, CH2 = backward.
  * Always zero the inactive channel before setting the active one.
  */
-void setMotorRPWM(float pwm) {
+void setMotorLPWM(float pwm) {
     pwm = limitPWM(pwm);
     if (pwm >= 0.0f) {
-        TIM4->CCR2 = 0;
-        TIM4->CCR1 = (uint32_t)(pwm * MAX_TIMER_COUNTS);
-    } else {
         TIM4->CCR1 = 0;
-        TIM4->CCR2 = (uint32_t)(-pwm * MAX_TIMER_COUNTS);
+        TIM4->CCR2 = (uint32_t)(pwm * MAX_TIMER_COUNTS);
+    } else {
+        TIM4->CCR2 = 0;
+        TIM4->CCR1 = (uint32_t)(-pwm * MAX_TIMER_COUNTS);
     }
 }
 

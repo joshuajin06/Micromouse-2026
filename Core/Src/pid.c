@@ -1,96 +1,84 @@
-/*
- * pid.c
- */
-
 #include "main.h"
 #include "motors.h"
 #include "encoders.h"
 
-/* Tuning constants — adjust these for your hardware */
-#define BASE_SPEED        0.30f   /* nominal duty cycle (0.0–1.0) */
-#define KPW               0.005f  /* proportional gain, angular */
-#define KDW               0.020f  /* derivative gain, angular */
-#define KPD               0.0003f /* proportional gain, distance */
-#define KDD               0.001f  /* derivative gain, distance */
-#define DONE_THRESHOLD    10      /* encoder count band considered "at goal" */
-#define DONE_CYCLES       50      /* consecutive SysTick cycles within band to be done */
-#define ERROR_HISTORY     12      /* ring-buffer depth for derivative smoothing */
-
-static int16_t goalDistance = 0;
-static int16_t goalAngle    = 0;
-
+/* Tuning constants */
+static float angleError = 0.0f;
+static float oldAngleError = 0.0f;
+static float distanceError = 0.0f;
 static float oldDistanceError = 0.0f;
-static float oldAngleError    = 0.0f;
+float kPw = 0.05f;
+float kDw = 0.75f;
+float kPx = 0.03f;
+float kDx = 0.0f;
 
-static int16_t angleErrorHistory[ERROR_HISTORY];
-static uint8_t historyIndex = 0;
+static float goalAngle = 0.0f;
+static float goalDistance = 0.0f;
+static float gDistanceCorrection;
+static float gAngleCorrection;
 
-static int16_t doneCounter  = 0;
-static int8_t  isDone       = 0;
-static int8_t  pidActive    = 0;
+volatile int16_t dbg_finalLeft;
+volatile int16_t dbg_finalRight;
+
+#define DIST_THRESHOLD 2
+#define ANGLE_THRESHOLD 2
+int isDone = 0;
+int pidActive = 0;
 
 void resetPID(void) {
-    goalDistance     = 0;
-    goalAngle        = 0;
+    oldAngleError = 0;
+    angleError = 0;
+    distanceError = 0.0f;
     oldDistanceError = 0.0f;
-    oldAngleError    = 0.0f;
-    doneCounter      = 0;
-    isDone           = 0;
-    pidActive        = 0;
-    historyIndex     = 0;
-
-    for (int i = 0; i < ERROR_HISTORY; i++) {
-        angleErrorHistory[i] = 0;
-    }
-
+    goalAngle = 0;
+    goalDistance = 0;
+    isDone = 0;
     resetEncoders();
-    resetMotors();
+    pidActive = 1;
 }
 
 void updatePID(void) {
-    if (!pidActive) return;
+    if(!pidActive) return;
 
-    int16_t rightCounts = getRightEncoderCounts();
     int16_t leftCounts  = getLeftEncoderCounts();
+    int16_t rightCounts = getRightEncoderCounts();
 
-    /* Positive angleError → right wheel ahead → rat drifting left */
-    float angleError    = (float)(rightCounts - leftCounts) - (float)goalAngle;
-    float distanceError = (float)goalDistance - (float)((rightCounts + leftCounts) / 2);
+    angleError = goalAngle - (float)(leftCounts - rightCounts);
+    float angleCorrection = kPw * angleError + kDw * (angleError - oldAngleError);
+    gAngleCorrection = angleCorrection;
+    oldAngleError = angleError;
 
-    /* Ring buffer: compare current error to the sample ERROR_HISTORY cycles ago */
-    angleErrorHistory[historyIndex] = (int16_t)angleError;
-    historyIndex = (uint8_t)((historyIndex + 1) % ERROR_HISTORY);
-
-    float dAngle    = angleError - (float)angleErrorHistory[historyIndex];
-    float dDistance = distanceError - oldDistanceError;
-
-    float angularCorrection  = KPW * angleError    + KDW * dAngle;
-    float distanceCorrection = KPD * distanceError + KDD * dDistance;
-
-    float leftPWM  = BASE_SPEED + distanceCorrection - angularCorrection;
-    float rightPWM = BASE_SPEED + distanceCorrection + angularCorrection;
-
-    setMotorLPWM(leftPWM);
-    setMotorRPWM(rightPWM);
-
-    oldAngleError    = angleError;
+    distanceError = goalDistance - ((float)(leftCounts + rightCounts)/2);
+    float distanceCorrection = kPx * distanceError + kDx * (distanceError - oldDistanceError);
+    if (distanceCorrection >  0.7f) distanceCorrection =  0.7f;
+    if (distanceCorrection < -0.7f) distanceCorrection = -0.7f;
     oldDistanceError = distanceError;
+    gDistanceCorrection = distanceCorrection;
 
-    if (distanceError > -DONE_THRESHOLD && distanceError < DONE_THRESHOLD &&
-        angleError    > -DONE_THRESHOLD && angleError    < DONE_THRESHOLD) {
-        doneCounter++;
-        if (doneCounter >= DONE_CYCLES) {
-            isDone = 1;
-        }
-    } else {
-        doneCounter = 0;
-        isDone      = 0;
+    setMotorLPWM(distanceCorrection + angleCorrection);
+    setMotorRPWM(distanceCorrection - angleCorrection);
+
+
+    if (goalAngle == 0.0f && goalDistance != 0.0f) {
+      // move: done on distance only
+      if (distanceError > -DIST_THRESHOLD && distanceError < DIST_THRESHOLD) {
+        dbg_finalLeft  = leftCounts;
+        dbg_finalRight = rightCounts;
+        isDone = 1;
+      }
+    } else if (goalDistance == 0.0f && goalAngle != 0.0f) {
+      // turn: done on angle only
+      if (angleError > -ANGLE_THRESHOLD && angleError < ANGLE_THRESHOLD) {
+        dbg_finalLeft  = leftCounts;
+        dbg_finalRight = rightCounts;
+        isDone = 1;
+      }
     }
 }
 
 void setPIDGoalD(int16_t distance) {
     goalDistance = distance;
-    pidActive = 1;
+    pidActive    = 1;
 }
 
 void setPIDGoalA(int16_t angle) {

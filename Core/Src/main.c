@@ -118,15 +118,16 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
+  move(3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // leftEncoderCount = getLeftEncoderCounts();
-    // rightEncoderCount = getRightEncoderCounts();
-    
+    leftEncoderCount = getLeftEncoderCounts();
+    rightEncoderCount = getRightEncoderCounts();
+
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
   }
