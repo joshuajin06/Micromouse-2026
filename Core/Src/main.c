@@ -51,9 +51,6 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
-volatile int16_t leftEncoderCount;
-volatile int16_t rightEncoderCount;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -129,6 +126,7 @@ int main(void)
     rightEncoderCount = getRightEncoderCounts();
 
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
