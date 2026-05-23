@@ -22,6 +22,7 @@ uint16_t readLeftIR(void);
 uint16_t readFrontLeftIR(void);
 uint16_t readFrontRightIR(void);
 uint16_t readRightIR(void);
+uint16_t readFrontIR(void);
 uint16_t analogRead(IR ir);
 
 #endif /* INC_IRS_H_ */

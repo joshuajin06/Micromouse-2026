@@ -4,12 +4,14 @@
 
 #include "main.h"
 #include "irs.h"
-#include "delay.h'"
+#include "delay.h"
+
+extern ADC_HandleTypeDef hadc1;
 
 // This is the buffer that will get filled up with all the measurements
 uint16_t adc_buf[NUM_SAMPLES];
 // "boolean" variable to keep say when the ADC has finished filling up the buffer
-uint8_t complete = 0;
+volatile uint8_t complete = 0;
 
 /*
  This function should handle everything for reading a specific IR
@@ -20,7 +22,23 @@ uint8_t complete = 0;
  */
 uint16_t readIR(IR ir)
 {
+    GPIO_TypeDef *port;
+    uint16_t pin;
 
+    switch (ir) {
+        case IR_LEFT:       port = IR_EMITTER_1_GPIO_Port; pin = IR_EMITTER_1_Pin; break;
+        case IR_FRONT_LEFT: port = IR_EMITTER_2_GPIO_Port; pin = IR_EMITTER_2_Pin; break;
+        case IR_FRONT_RIGHT:port = IR_EMITTER_3_GPIO_Port; pin = IR_EMITTER_3_Pin; break;
+        case IR_RIGHT:      port = IR_EMITTER_4_GPIO_Port; pin = IR_EMITTER_4_Pin; break;
+        default: return 0;
+    }
+
+    HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET);
+    delayMicroseconds(20);
+    uint16_t val = analogRead(ir);
+    HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
+
+    return val;
 }
 
 /*
@@ -29,23 +47,34 @@ uint16_t readIR(IR ir)
  */
 uint16_t readLeftIR(void)
 {
-
+    return readIR(IR_LEFT);
 }
 
 uint16_t readFrontLeftIR(void)
 {
-
+    return readIR(IR_FRONT_LEFT);
 }
 
 uint16_t readFrontRightIR(void)
 {
-
+    return readIR(IR_FRONT_RIGHT);
 }
-
 
 uint16_t readRightIR(void)
 {
+    return readIR(IR_RIGHT);
+}
 
+uint16_t readFrontIR(void)
+{
+    HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(IR_EMITTER_3_GPIO_Port, IR_EMITTER_3_Pin, GPIO_PIN_SET);
+    delayMicroseconds(20);
+    uint16_t fl = analogRead(IR_FRONT_LEFT);
+    uint16_t fr = analogRead(IR_FRONT_RIGHT);
+    HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(IR_EMITTER_3_GPIO_Port, IR_EMITTER_3_Pin, GPIO_PIN_RESET);
+    return (fl + fr) / 2;
 }
 
 /*
@@ -55,8 +84,7 @@ uint16_t readRightIR(void)
 uint16_t analogRead(IR ir)
 {
     ADC_ChannelConfTypeDef sConfig = {0}; //this initializes the IR ADC [Analog to Digital Converter]
-    ADC_HandleTypeDef *hadc1_ptr = Get_HADC1_Ptr(); //this is a pointer to your hal_adc
-    //this pointer will also be used to read the analog value, val = HAL_ADC_GetValue(hadc1_ptr);
+    ADC_HandleTypeDef *hadc1_ptr = &hadc1;
 
     //this picks the IR direction to choose the right ADC.
     switch(ir)
@@ -65,13 +93,13 @@ uint16_t analogRead(IR ir)
             sConfig.Channel = ADC_CHANNEL_15;
             break;
         case IR_FRONT_LEFT:
-            sConfig.Channel = ADC_CHANNEL_6;
+            sConfig.Channel = ADC_CHANNEL_7;
             break;
         case IR_FRONT_RIGHT:
-            sConfig.Channel = ADC_CHANNEL_9;
+            sConfig.Channel = ADC_CHANNEL_13;
             break;
         case IR_RIGHT:
-            sConfig.Channel = ADC_CHANNEL_14;
+            sConfig.Channel = ADC_CHANNEL_11;
             break;
         default:
             return 0;

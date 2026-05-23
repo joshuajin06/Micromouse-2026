@@ -49,6 +49,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/pid.c
     Core/Src/controller.c
     Core/Src/systick.c
+    Core/Src/irs.c
+    Core/Src/delay.c
+    Core/Src/walls.c
 )
 
 # Add include paths

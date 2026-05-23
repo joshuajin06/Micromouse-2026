@@ -24,6 +24,8 @@
 #include "motors.h"
 #include "controller.h"
 #include "encoders.h"
+#include "irs.h"
+#include "delay.h"
 #include <stdint.h>
 
 /* USER CODE END Includes */
@@ -52,7 +54,12 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
+volatile uint16_t irLeft;
+volatile uint16_t irFront;
+volatile uint16_t irRight;
 
+volatile uint16_t leftEncoderCount;
+volatile uint16_t rightEncoderCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -107,6 +114,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  Delay_Init();
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
@@ -115,7 +123,6 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
-  move(3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -124,6 +131,9 @@ int main(void)
   {
     leftEncoderCount = getLeftEncoderCounts();
     rightEncoderCount = getRightEncoderCounts();
+    irLeft       = readLeftIR();
+    irFront  = readFrontIR();
+    irRight      = readRightIR();
 
     /* USER CODE END WHILE */
 
