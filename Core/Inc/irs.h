@@ -5,6 +5,8 @@
 #ifndef INC_IRS_H_
 #define INC_IRS_H_
 
+#include <stdint.h>
+
 // The number of samples to take
 #define NUM_SAMPLES 128
 

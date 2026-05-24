@@ -1,6 +1,12 @@
 #include "main.h"
 #include "motors.h"
 #include "encoders.h"
+#include "walls.h"
+
+extern volatile uint16_t irLeft;
+extern volatile uint16_t irRight;
+#define cachedIrLeft  irLeft
+#define cachedIrRight irRight
 
 /* Tuning constants */
 static float angleError = 0.0f;
@@ -12,6 +18,12 @@ float kDw = 0.75f;
 float kPx = 0.03f;
 float kDx = 0.0f;
 
+float kPir = 0.07f;
+float kPid = 0.5f;
+
+static float irError = 0.0f;
+static float oldIrError = 0.0f;
+
 static float goalAngle = 0.0f;
 static float goalDistance = 0.0f;
 static float gDistanceCorrection;
@@ -22,6 +34,10 @@ volatile int16_t dbg_finalRight;
 
 #define DIST_THRESHOLD 2
 #define ANGLE_THRESHOLD 2
+
+#define IR_LEFT_CENTER 1750
+#define IR_RIGHT_CENTER 2000
+
 int isDone = 0;
 int pidActive = 0;
 
@@ -43,7 +59,24 @@ void updatePID(void) {
     int16_t leftCounts  = getLeftEncoderCounts();
     int16_t rightCounts = getRightEncoderCounts();
 
+    float leftError  = (float)cachedIrLeft  - IR_LEFT_CENTER;
+    float rightError = (float)cachedIrRight - IR_RIGHT_CENTER;
+
+    if (cachedIrLeft > WALL_THRESHOLD_LEFT && cachedIrRight > WALL_THRESHOLD_RIGHT) {
+        irError = rightError - leftError;
+    } else if (cachedIrLeft > WALL_THRESHOLD_LEFT) {
+        irError = -leftError;
+    } else if (cachedIrRight > WALL_THRESHOLD_RIGHT) {
+        irError =  rightError;
+    }
+    oldIrError = irError;
+
     angleError = goalAngle - (float)(leftCounts - rightCounts);
+
+    if(goalDistance != 0) {
+      angleError -= kPir * irError + kPid * (irError - oldIrError);
+    }
+
     float angleCorrection = kPw * angleError + kDw * (angleError - oldAngleError);
     gAngleCorrection = angleCorrection;
     oldAngleError = angleError;

@@ -5,6 +5,11 @@
 #include "main.h"
 #include "controller.h"
 #include "pid.h"
+#include "walls.h"
+#include "irs.h"
+
+extern volatile uint16_t irLeft;
+extern volatile uint16_t irRight;
 
 /*
  * Encoder counts calibrated for your maze cell size and hardware.
@@ -13,6 +18,8 @@
  */
 #define COUNTS_PER_CELL    625  /* encoder counts for one 180mm maze cell */
 #define COUNTS_PER_90DEG   562  /* encoder counts for a 90-degree in-place turn */
+
+#define FRONT_STOP_THRESHOLD 2750
 
 /*
  * move(1)  → forward one cell
@@ -25,7 +32,12 @@ void move(int8_t n) {
     setPIDGoalA(0);
 
     while (!PIDdone()) {
-        /* SysTick ISR calls updatePID() every millisecond; just wait */
+        irLeft  = readLeftIR();
+        irRight = readRightIR();
+        if (wallFront() && readFrontIR() > FRONT_STOP_THRESHOLD) {
+            resetPID();
+            break;
+        }
     }
 
     resetPID();

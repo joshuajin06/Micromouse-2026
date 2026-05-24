@@ -25,6 +25,7 @@
 #include "controller.h"
 #include "encoders.h"
 #include "irs.h"
+#include "walls.h"
 #include "delay.h"
 #include <stdint.h>
 
@@ -131,9 +132,20 @@ int main(void)
   {
     leftEncoderCount = getLeftEncoderCounts();
     rightEncoderCount = getRightEncoderCounts();
-    irLeft       = readLeftIR();
-    irFront  = readFrontIR();
-    irRight      = readRightIR();
+    irLeft  = readLeftIR();
+    irFront = readFrontIR();
+    irRight = readRightIR();
+
+    if (!wallFront()) {
+        move(1);
+        HAL_Delay(50);
+    } else if (!wallRight()) {
+        turn(1);
+        HAL_Delay(50);
+    } else {
+        turn(-1);
+        HAL_Delay(50);
+    }
 
     /* USER CODE END WHILE */
 
