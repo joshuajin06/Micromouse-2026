@@ -16,10 +16,10 @@ extern volatile uint16_t irRight;
  * Measure empirically: drive one cell, read encoder counts, set COUNTS_PER_CELL.
  * Similarly for COUNTS_PER_90DEG.
  */
-#define COUNTS_PER_CELL    625  /* encoder counts for one 180mm maze cell */
+#define COUNTS_PER_CELL    600  /* encoder counts for one 180mm maze cell */
 #define COUNTS_PER_90DEG   562  /* encoder counts for a 90-degree in-place turn */
 
-#define FRONT_STOP_THRESHOLD 2750
+#define FRONT_STOP_THRESHOLD 3000
 
 /*
  * move(1)  → forward one cell
@@ -34,12 +34,19 @@ void move(int8_t n) {
     while (!PIDdone()) {
         irLeft  = readLeftIR();
         irRight = readRightIR();
-        if (wallFront() && readFrontIR() > FRONT_STOP_THRESHOLD) {
-            resetPID();
-            break;
+        if (wallApproaching()) {
+            setPIDGoalD(COUNTS_PER_CELL*2);
+            if(readFrontIR() > FRONT_STOP_THRESHOLD) {
+                resetPID();
+                break;
+            }
+            continue;
         }
+        // if(wallFront() && readFrontIR() > FRONT_STOP_THRESHOLD) {
+        //     resetPID();
+        //     break;
+        // }
     }
-
     resetPID();
 }
 

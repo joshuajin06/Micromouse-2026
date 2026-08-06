@@ -12,7 +12,7 @@
  * PWM_MAX caps the duty cycle to prevent overdriving the H-bridge.
  */
 #define MAX_TIMER_COUNTS  3199u
-#define PWM_MAX           0.5f
+#define PWM_MAX           0.8f
 
 float limitPWM(float pwm);
 void  setMotorLPWM(float pwm);

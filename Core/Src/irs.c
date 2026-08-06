@@ -67,14 +67,15 @@ uint16_t readRightIR(void)
 
 uint16_t readFrontIR(void)
 {
-    HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(IR_EMITTER_3_GPIO_Port, IR_EMITTER_3_Pin, GPIO_PIN_SET);
     delayMicroseconds(20);
-    uint16_t fl = analogRead(IR_FRONT_LEFT);
+    // uint16_t fl = analogRead(IR_FRONT_LEFT);
     uint16_t fr = analogRead(IR_FRONT_RIGHT);
-    HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(IR_EMITTER_2_GPIO_Port, IR_EMITTER_2_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(IR_EMITTER_3_GPIO_Port, IR_EMITTER_3_Pin, GPIO_PIN_RESET);
-    return (fl + fr) / 2;
+    // return (fl + fr) / 2;
+    return fr;
 }
 
 /*

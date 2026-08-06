@@ -19,3 +19,7 @@ uint8_t wallRight(void)
 {
     return readRightIR() > WALL_THRESHOLD_RIGHT;
 }
+
+uint8_t wallApproaching(void) {
+    return readFrontIR() > WALL_APPROACHING_FRONT;
+}

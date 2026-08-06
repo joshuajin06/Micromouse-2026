@@ -26,6 +26,7 @@
 #include "encoders.h"
 #include "irs.h"
 #include "walls.h"
+#include "solver.h"
 #include "delay.h"
 #include <stdint.h>
 
@@ -61,6 +62,8 @@ volatile uint16_t irRight;
 
 volatile uint16_t leftEncoderCount;
 volatile uint16_t rightEncoderCount;
+
+volatile uint8_t motorsEnabled = 1;  /* set to 1 in live watch to enable movement */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -124,28 +127,46 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
+  HAL_Delay(2000);
+
+  // move(1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    leftEncoderCount = getLeftEncoderCounts();
-    rightEncoderCount = getRightEncoderCounts();
-    irLeft  = readLeftIR();
-    irFront = readFrontIR();
-    irRight = readRightIR();
+    // irLeft  = readLeftIR();
+    // irFront = readFrontIR();
+    // irRight = readRightIR();
+  
+    // leftEncoderCount = getLeftEncoderCounts();
+    // rightEncoderCount = getRightEncoderCounts();
 
-    if (!wallFront()) {
-        move(1);
-        HAL_Delay(50);
-    } else if (!wallRight()) {
-        turn(1);
-        HAL_Delay(50);
-    } else {
-        turn(-1);
-        HAL_Delay(50);
+    if (motorsEnabled) {
+        irLeft  = readLeftIR();
+        irFront = readFrontIR();
+        irRight = readRightIR();
+        Action nextMove = solver();
+        switch (nextMove) {
+            case FORWARD:
+                move(1);
+                break;
+            case LEFT:
+                turn(-1);
+                break;
+            case RIGHT:
+                turn(1);
+                break;
+            case IDLE:
+                HAL_GPIO_WritePin(GPIOC, USER_LED_1_Pin, GPIO_PIN_SET);
+                break;
+        }
     }
+    HAL_Delay(150);
+
+
 
     /* USER CODE END WHILE */
 

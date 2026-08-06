@@ -13,13 +13,13 @@ static float angleError = 0.0f;
 static float oldAngleError = 0.0f;
 static float distanceError = 0.0f;
 static float oldDistanceError = 0.0f;
-float kPw = 0.05f;
+float kPw = 0.07f;
 float kDw = 0.75f;
 float kPx = 0.03f;
 float kDx = 0.0f;
 
 float kPir = 0.07f;
-float kPid = 0.5f;
+float kDir = 0.7f;
 
 static float irError = 0.0f;
 static float oldIrError = 0.0f;
@@ -35,8 +35,8 @@ volatile int16_t dbg_finalRight;
 #define DIST_THRESHOLD 2
 #define ANGLE_THRESHOLD 2
 
-#define IR_LEFT_CENTER 1750
-#define IR_RIGHT_CENTER 2000
+#define IR_LEFT_CENTER 2000
+#define IR_RIGHT_CENTER 1300
 
 int isDone = 0;
 int pidActive = 0;
@@ -69,22 +69,25 @@ void updatePID(void) {
     } else if (cachedIrRight > WALL_THRESHOLD_RIGHT) {
         irError =  rightError;
     }
+
     oldIrError = irError;
 
     angleError = goalAngle - (float)(leftCounts - rightCounts);
 
     if(goalDistance != 0) {
-      angleError -= kPir * irError + kPid * (irError - oldIrError);
+      angleError -= kPir * irError + kDir * (irError - oldIrError);
     }
 
     float angleCorrection = kPw * angleError + kDw * (angleError - oldAngleError);
+    // if (angleCorrection >  0.5f) angleCorrection =  0.5f;
+    // if (angleCorrection < -0.5f) angleCorrection = -0.5f;
     gAngleCorrection = angleCorrection;
     oldAngleError = angleError;
 
     distanceError = goalDistance - ((float)(leftCounts + rightCounts)/2);
     float distanceCorrection = kPx * distanceError + kDx * (distanceError - oldDistanceError);
-    if (distanceCorrection >  0.7f) distanceCorrection =  0.7f;
-    if (distanceCorrection < -0.7f) distanceCorrection = -0.7f;
+    if (distanceCorrection >  0.5f) distanceCorrection =  0.5f;
+    if (distanceCorrection < -0.5f) distanceCorrection = -0.5f;
     oldDistanceError = distanceError;
     gDistanceCorrection = distanceCorrection;
 

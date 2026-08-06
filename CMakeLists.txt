@@ -52,6 +52,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/irs.c
     Core/Src/delay.c
     Core/Src/walls.c
+    Core/Src/solver.c
 )
 
 # Add include paths
